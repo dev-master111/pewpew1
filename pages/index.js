@@ -47,11 +47,6 @@ export default function Home() {
                 value={selectedPrompt}
               />
               <SavePromptModal />
-              <Dropdown text={null} button icon="ellipsis horizontal">
-                <Dropdown.Menu>
-                  <Dropdown.Item text='New' />
-                </Dropdown.Menu>
-              </Dropdown>
             </div>
           </div>
           <Divider />
@@ -118,13 +113,13 @@ export default function Home() {
                 value={temperature}
                 max={1}
                 min={0}
-                step={0.1}
+                step={0.01}
                 onChange={e => setTemperature(e.target.value)}
               />
               <RangeItem
                 label="Maximum length"
                 value={maxLen}
-                max={4096}
+                max={4000}
                 min={0}
                 step={1}
                 onChange={e => setMaxLen(e.target.value)}
@@ -132,32 +127,32 @@ export default function Home() {
               <RangeItem
                 label="Top P"
                 value={topP}
-                max={10}
+                max={1}
                 min={0}
-                step={1}
+                step={0.01}
                 onChange={e => setTopP(e.target.value)}
               />
               <RangeItem
                 label="Frequency penalty"
                 value={freqency}
-                max={1}
+                max={2}
                 min={0}
-                step={0.1}
+                step={0.01}
                 onChange={e => setFrequency(e.target.value)}
               />
               <RangeItem
                 label="Presence penalty"
                 value={presence}
-                max={1}
+                max={2}
                 min={0}
-                step={0.1}
+                step={0.01}
                 onChange={e => setPresence(e.target.value)}
               />
               <RangeItem
                 label="Best of"
                 value={bestOf}
-                max={10}
-                min={0}
+                max={20}
+                min={1}
                 step={1}
                 onChange={e => setBestOf(e.target.value)}
               />
