@@ -32,15 +32,20 @@ export default function Home() {
   }, [])
 
   const initialize = async () => {
-    const response = await fetch('/api/models')
+    try {
+      const response = await fetch('/api/models')
 
-    const responseData = await response.json()
+      const responseData = await response.json()
 
-    setModelOptions(responseData.data.map(modelData => ({
-      key: modelData.id,
-      text: modelData.id,
-      value: modelData.id
-    })))
+      setModelOptions(responseData.data.map(modelData => ({
+        key: modelData.id,
+        text: modelData.id,
+        value: modelData.id
+      })))
+    } catch (error) {
+      console.error('Failed to get models')
+      console.error(error)
+    }
   }
 
   const handleSubmit = async (e) => {
