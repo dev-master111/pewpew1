@@ -1,6 +1,6 @@
 import Head from 'next/head'
-import { useState } from 'react'
-import { Divider, TextArea, Form,  Button, Icon, Dropdown } from 'semantic-ui-react'
+import { useState, useEffect } from 'react'
+import { Divider, TextArea, Form,  Button, Icon } from 'semantic-ui-react'
 import RangeItem from '@/components/RangeItem'
 import SavePromptModal from '@/components/SavePromptModal'
 import HistoryList from '@/components/HistoryList'
@@ -24,6 +24,57 @@ export default function Home() {
   const [selectedModel, setSelectedModel] = useState(null)
   const [openHistory, setOpenHistory] = useState(false)
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null)
+  const [inputText, setInputText] = useState('')
+  const [outputText, setOutputText] = useState('')
+
+  useEffect(() => {
+    initialize()
+  }, [])
+
+  const initialize = async () => {
+    const response = await fetch('/api/models')
+
+    const responseData = await response.json()
+
+    setModelOptions(responseData.data.map(modelData => ({
+      key: modelData.id,
+      text: modelData.id,
+      value: modelData.id
+    })))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    try {
+      const response = await fetch('/api/completions', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          text: inputText,
+          options: {
+            temperature,
+            maxTokens: maxLen,
+            topP: topP,
+            frequencyPenalty: freqency,
+            presencePenalty: presence
+          }
+        })
+      })
+
+      const responseData = await response.json()
+      if (responseData.result.choices && responseData.result.choices.length > 0){
+        setOutputText(responseData.result.choices[0].text)
+      } else {
+        setOutputText('')
+      }
+    } catch (error) {
+      setOutputText('')
+    }
+  }
 
   return (
     <>
@@ -64,16 +115,24 @@ export default function Home() {
               </div>
             )}
 
-            <Form className="playground-container">
+            <Form onSubmit={handleSubmit} className="playground-container">
               <div className="playground-panels">
                 <div className="playground-panel">
                   <div className="input-wrapper">
                     <div className="input-label">Input</div>
-                    <TextArea placeholder="Input..." />
+                    <TextArea
+                      onChange={e => setInputText(e.target.value)}
+                      placeholder="Input..."
+                      value={inputText}
+                    />
                   </div>
                   <div className="input-wrapper">
                     <div className="input-label">Output</div>
-                    <TextArea disabled placeholder="Output..." />
+                    <TextArea
+                      disabled
+                      placeholder="Output..."
+                      value={outputText}
+                    />
                   </div>
                 </div>
 
