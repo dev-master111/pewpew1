@@ -5,42 +5,16 @@ import { Icon, Dropdown } from 'semantic-ui-react'
 export default function HistoryList({
   onClose,
   onChange,
-  value
+  value,
+  listData
 }) {
-  const [hisotry, setHistory] = useState([
-    {
-      date: '2023/02/21 10:38:00',
-      id: Math.round(Math.random() * 1000000)
-    },
-    {
-      date: '2023/02/21 09:38:00',
-      id: Math.round(Math.random() * 1000000)
-    },
-    {
-      date: '2023/02/21 07:38:00',
-      id: Math.round(Math.random() * 1000000)
-    },
-    {
-      date: '2023/02/20 10:38:00',
-      id: Math.round(Math.random() * 1000000)
-    },
-    {
-      date: '2023/02/20 09:38:00',
-      id: Math.round(Math.random() * 1000000)
-    },
-    {
-      date: '2023/02/20 07:38:00',
-      id: Math.round(Math.random() * 1000000)
-    },
-  ])
-
   const groupHistoryByDate = {}
   const daysList = []
 
   for (let idx=0; idx < 30; idx += 1) {
     const today = moment().subtract(idx, 'day').format('dddd, D MMM YYYY')
-    groupHistoryByDate[today] = hisotry.filter(hisData => {
-      if (moment(hisData.date).format('YYYY/MM/DD') === moment().subtract(idx, 'day').format('YYYY/MM/DD')) {
+    groupHistoryByDate[today] = listData.filter(hisData => {
+      if (moment(hisData.created_at).format('YYYY/MM/DD') === moment().subtract(idx, 'day').format('YYYY/MM/DD')) {
         return true
       }
 
@@ -75,16 +49,16 @@ export default function HistoryList({
               {
                 groupHistoryByDate[day].map(data => (
                   <div
-                    className={`history-item${data.id === value ? ' selected' : ''}`}
-                    key={data.id}
-                    onClick={() => onChange(data.id)}
+                    className={`history-item${value && data._id === value._id ? ' selected' : ''}`}
+                    key={data._id}
+                    onClick={() => onChange(data)}
                   >
-                    <div>{moment(data.date).format('hh:mm')}</div>
+                    <div>{moment(data.created_at).format('hh:mm')}</div>
                     <div className="commit-box">
                       <div className="commit-line"></div>
                       <div className="commit-circle" />
                     </div>
-                    <div className="commit-id">{data.id}</div>
+                    <div className="commit-id">{data._id.slice(data._id.length - 6)}</div>
                   </div>
                 ))
               }

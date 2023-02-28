@@ -1,9 +1,11 @@
 import Head from 'next/head'
 import { useState, useEffect } from 'react'
-import { Divider, TextArea, Form,  Button, Icon } from 'semantic-ui-react'
+import { Divider, TextArea, Form,  Button, Icon, Loader, Dimmer } from 'semantic-ui-react'
 import RangeItem from '@/components/RangeItem'
 import SavePromptModal from '@/components/SavePromptModal'
 import HistoryList from '@/components/HistoryList'
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
 
 export default function Home() {
   const [temperature, setTemperature] = useState(0.7)
@@ -26,15 +28,20 @@ export default function Home() {
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null)
   const [inputText, setInputText] = useState('')
   const [outputText, setOutputText] = useState('')
+  const [historyList, setHistoryList] = useState([])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     initialize()
   }, [])
 
   const initialize = async () => {
-    try {
-      const response = await fetch('/api/models')
+    setLoading(true)
 
+    try {
+      await getPropmpts()
+
+      const response = await fetch('/api/models')
       const responseData = await response.json()
 
       setModelOptions(responseData.data.map(modelData => ({
@@ -42,6 +49,45 @@ export default function Home() {
         text: modelData.id,
         value: modelData.id
       })))
+
+      setLoading(false)
+    } catch (error) {
+      console.error('Failed to get models')
+      console.error(error)
+      setLoading(false)
+    }
+  }
+
+  const getHistoryData = async () => {
+    try {
+      const historyRes = await fetch(`/api/history?prompt=${selectedPrompt}`)
+      const historyData = await historyRes.json()
+
+      if (historyData && Array.isArray(historyData)) {
+        setHistoryList(historyData)
+      }
+    } catch (error) {
+      console.error('Failed to get models')
+      console.error(error)
+    }
+  }
+
+  const getPropmpts = async () => {
+    try {
+      const promptsRes = await fetch('/api/prompts')
+      const promptsData = await promptsRes.json()
+
+      if (promptsData && Array.isArray(promptsData)) {
+        setPromptOptions(promptsData.map(prompt => ({
+          key: prompt._id,
+          text: prompt.name,
+          value: prompt._id
+        })))
+
+        if (promptsData.length > 0) {
+          setSelectedPrompt(promptsData[0]._id)
+        }
+      }
     } catch (error) {
       console.error('Failed to get models')
       console.error(error)
@@ -51,7 +97,18 @@ export default function Home() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    if (!selectedPrompt || !selectedModel) {
+      toast.error('Please select Prompt and Model.')
+      return;
+    }
+
+    if (!inputText) {
+      toast.error("Input text shouldn't be null.")
+      return;
+    }
+
     try {
+      setLoading(true)
       const response = await fetch('/api/completions', {
         method: 'POST',
         headers: {
@@ -60,6 +117,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           text: inputText,
+          prompt: selectedPrompt,
           options: {
             temperature,
             maxTokens: maxLen,
@@ -71,14 +129,38 @@ export default function Home() {
       })
 
       const responseData = await response.json()
-      if (responseData.result.choices && responseData.result.choices.length > 0){
-        setOutputText(responseData.result.choices[0].text)
+      if (responseData.choices && responseData.choices.length > 0){
+        setOutputText(responseData.choices[0].text)
       } else {
         setOutputText('')
       }
+
+      await getHistoryData()
+      setLoading(false)
     } catch (error) {
       setOutputText('')
+      setLoading(false)
     }
+  }
+
+  const onAddPrompt = (data) => {
+    setPromptOptions(data.map(prompt => ({
+      key: prompt._id,
+      text: prompt.name,
+      value: prompt.name
+    })))
+  }
+
+  const onOpenHistory = async () => {
+    if (!selectedPrompt) {
+      toast.error('Please select Prompt.')
+      return;
+    }
+
+    setLoading(true)
+    setOpenHistory(true)
+    await getHistoryData()
+    setLoading(false)
   }
 
   return (
@@ -91,6 +173,12 @@ export default function Home() {
         </div>
         <Divider />
         <div className="page-content">
+          <ToastContainer
+            position="top-center"
+            closeOnClick
+            hideProgressBar={true}
+          />
+
           <div className="page-content-header">
             <div className="title">Playground</div>
             <div className="actions">
@@ -98,11 +186,14 @@ export default function Home() {
                 name='prompt'
                 onChange={(e, value) => {
                   setSelectedPrompt(value.value)
+                  setHistoryList([])
+                  setSelectedHistoryItem(null)
+                  setOpenHistory(false)
                 }}
                 options={promptOptions}
                 value={selectedPrompt}
               />
-              <SavePromptModal />
+              <SavePromptModal onSubmit={onAddPrompt} />
             </div>
           </div>
           <Divider />
@@ -116,6 +207,7 @@ export default function Home() {
                   }}
                   onChange={value => setSelectedHistoryItem(value)}
                   value={selectedHistoryItem}
+                  listData={historyList}
                 />
               </div>
             )}
@@ -145,18 +237,33 @@ export default function Home() {
                   <div className="playground-panel">
                     <div className="input-wrapper">
                       <div className="input-label">Old Input</div>
-                      <TextArea disabled placeholder="Input..." />
+                      <TextArea
+                        disabled
+                        placeholder="Input..."
+                        value={selectedHistoryItem.input_text}
+                      />
                     </div>
                     <div className="input-wrapper">
                       <div className="input-label">Old Output</div>
-                      <TextArea disabled placeholder="Output..." />
+                      <TextArea
+                        disabled
+                        placeholder="Output..."
+                        value={selectedHistoryItem.output_text}
+                      />
                     </div>
                   </div>
                 )}
               </div>
               <div className="actions">
-                <Button type="submit" color="green">Submit</Button>
-                <Icon name="history" onClick={e => setOpenHistory(true)} />
+                <Button
+                  type="submit"
+                  color="green"
+                  disabled={!inputText}
+                  title={"Input text shouldn't be null."}
+                >
+                  Submit
+                </Button>
+                <Icon name="history" onClick={onOpenHistory} />
               </div>
             </Form>
 
@@ -222,6 +329,14 @@ export default function Home() {
               />
             </div>
           </div>
+
+          {loading && (
+            <div className="page-loader">
+              <Dimmer active>
+                <Loader size="large" />
+              </Dimmer>
+            </div>
+          )}
         </div>
       </main>
     </>

@@ -1,10 +1,42 @@
 import React from 'react'
 import { Button, Form, Modal } from 'semantic-ui-react'
 
-function SavePromptModal() {
+function SavePromptModal({ onSubmit }) {
   const [open, setOpen] = React.useState(false)
   const [name, setName] = React.useState('')
   const [description, setDescription] = React.useState('')
+
+  React.useEffect(() => {
+    if (!open) {
+      setName('')
+      setDescription('')
+    }
+  }, [open])
+
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch('/api/prompts', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name,
+          description
+        })
+      })
+
+      const responseData = await response.json()
+      if (responseData && Array.isArray(responseData)) {
+        onSubmit(responseData)
+      }
+    } catch (error) {
+      setOutputText('')
+    }
+
+    setOpen(false)
+  }
 
   return (
     <Modal
@@ -40,7 +72,8 @@ function SavePromptModal() {
         </Button>
         <Button
           content="Save"
-          onClick={() => setOpen(false)}
+          disabled={!name}
+          onClick={handleSubmit}
           positive
         />
       </Modal.Actions>
