@@ -26,6 +26,14 @@ export default function HistoryList({
     }
   }
 
+  const onClickHistory = (data) => {
+    if (!value || data._id !== value._id) {
+      onChange(data)
+    } else {
+      onChange(null)
+    }
+  }
+
   return (
     <div className="history-list-wrapper">
       <div className="hisotry-header">
@@ -51,7 +59,7 @@ export default function HistoryList({
                   <div
                     className={`history-item${value && data._id === value._id ? ' selected' : ''}`}
                     key={data._id}
-                    onClick={() => onChange(data)}
+                    onClick={() => onClickHistory(data)}
                   >
                     <div>{moment(data.created_at).format('hh:mm')}</div>
                     <div className="commit-box">

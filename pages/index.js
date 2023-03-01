@@ -89,6 +89,12 @@ export default function Home() {
             sessionStorage.setItem('currentPrompt', promptsData[0]._id)
           } else {
             setSelectedPrompt(oldPrompt)
+
+            const promptDetails = promptsData.find(prompt => prompt._id === oldPrompt)
+
+            if (promptDetails) {
+              setInputText(promptDetails.text || '')
+            }
           }
         }
       }
@@ -278,17 +284,19 @@ export default function Home() {
                   </div>
                 </div>
               )}
-              <div className="actions">
-                <Button
-                  type="submit"
-                  color="green"
-                  disabled={!inputText}
-                  title={"Input text shouldn't be null."}
-                >
-                  Submit
-                </Button>
-                <Icon name="history" onClick={onOpenHistory} />
-              </div>
+              {!selectedHistoryItem && (
+                <div className="actions">
+                  <Button
+                    type="submit"
+                    color="green"
+                    disabled={!inputText}
+                    title={"Input text shouldn't be null."}
+                  >
+                    Submit
+                  </Button>
+                  <Icon name="history" onClick={onOpenHistory} />
+                </div>
+              )}
             </Form>
 
             <div className="settings-sidebar">
