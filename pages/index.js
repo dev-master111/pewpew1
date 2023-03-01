@@ -4,8 +4,9 @@ import { Divider, TextArea, Form,  Button, Icon, Loader, Dimmer } from 'semantic
 import RangeItem from '@/components/RangeItem'
 import SavePromptModal from '@/components/SavePromptModal'
 import HistoryList from '@/components/HistoryList'
-import 'react-toastify/dist/ReactToastify.css';
-import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'
+import { ToastContainer, toast } from 'react-toastify'
+import ReactDiffViewer from 'react-diff-viewer'
 
 export default function Home() {
   const [temperature, setTemperature] = useState(0.7)
@@ -23,7 +24,7 @@ export default function Home() {
       value: 'text-davinci-003',
     }
   ])
-  const [selectedModel, setSelectedModel] = useState(null)
+  const [selectedModel, setSelectedModel] = useState('text-davinci-003')
   const [openHistory, setOpenHistory] = useState(false)
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null)
   const [inputText, setInputText] = useState('')
@@ -78,14 +79,17 @@ export default function Home() {
       const promptsData = await promptsRes.json()
 
       if (promptsData && Array.isArray(promptsData)) {
-        setPromptOptions(promptsData.map(prompt => ({
-          key: prompt._id,
-          text: prompt.name,
-          value: prompt._id
-        })))
+        setPromptOptions(promptsData)
 
         if (promptsData.length > 0) {
-          setSelectedPrompt(promptsData[0]._id)
+          const oldPrompt = sessionStorage.getItem('currentPrompt')
+
+          if (!oldPrompt) {
+            setSelectedPrompt(promptsData[0]._id)
+            sessionStorage.setItem('currentPrompt', promptsData[0]._id)
+          } else {
+            setSelectedPrompt(oldPrompt)
+          }
         }
       }
     } catch (error) {
@@ -99,12 +103,12 @@ export default function Home() {
 
     if (!selectedPrompt || !selectedModel) {
       toast.error('Please select Prompt and Model.')
-      return;
+      return
     }
 
     if (!inputText) {
       toast.error("Input text shouldn't be null.")
-      return;
+      return
     }
 
     try {
@@ -144,23 +148,34 @@ export default function Home() {
   }
 
   const onAddPrompt = (data) => {
-    setPromptOptions(data.map(prompt => ({
-      key: prompt._id,
-      text: prompt.name,
-      value: prompt.name
-    })))
+    setPromptOptions(data)
   }
 
   const onOpenHistory = async () => {
     if (!selectedPrompt) {
       toast.error('Please select Prompt.')
-      return;
+      return
     }
 
     setLoading(true)
     setOpenHistory(true)
     await getHistoryData()
     setLoading(false)
+  }
+
+  const onChangePrompt = value => {
+    setSelectedPrompt(value.value)
+    sessionStorage.setItem('currentPrompt', value.value)
+    setHistoryList([])
+    setSelectedHistoryItem(null)
+    setOpenHistory(false)
+    setOutputText('')
+
+    const promptDetails = promptOptions.find(prompt => prompt._id === value.value)
+
+    if (promptDetails) {
+      setInputText(promptDetails.text || '')
+    }
   }
 
   return (
@@ -184,16 +199,20 @@ export default function Home() {
             <div className="actions">
               <Form.Select
                 name='prompt'
-                onChange={(e, value) => {
-                  setSelectedPrompt(value.value)
-                  setHistoryList([])
-                  setSelectedHistoryItem(null)
-                  setOpenHistory(false)
-                }}
-                options={promptOptions}
+                onChange={(e, value) => onChangePrompt(value)}
+                options={promptOptions.map(prompt => ({
+                  key: prompt._id,
+                  value: prompt._id,
+                  text: prompt.name
+                }))}
                 value={selectedPrompt}
               />
-              <SavePromptModal onSubmit={onAddPrompt} />
+              <SavePromptModal
+                onSubmit={onAddPrompt}
+                text={inputText}
+                prompts={promptOptions}
+                current={selectedPrompt}
+              />
             </div>
           </div>
           <Divider />
@@ -213,47 +232,52 @@ export default function Home() {
             )}
 
             <Form onSubmit={handleSubmit} className="playground-container">
-              <div className="playground-panels">
-                <div className="playground-panel">
-                  <div className="input-wrapper">
-                    <div className="input-label">Input</div>
-                    <TextArea
-                      onChange={e => setInputText(e.target.value)}
-                      placeholder="Input..."
-                      value={inputText}
-                    />
-                  </div>
-                  <div className="input-wrapper">
-                    <div className="input-label">Output</div>
-                    <TextArea
-                      disabled
-                      placeholder="Output..."
-                      value={outputText}
-                    />
-                  </div>
-                </div>
-
-                {selectedHistoryItem && (
+              {!selectedHistoryItem && (
+                <div className="playground-panels">
                   <div className="playground-panel">
                     <div className="input-wrapper">
-                      <div className="input-label">Old Input</div>
+                      <div className="input-label">Input</div>
                       <TextArea
-                        disabled
+                        onChange={e => setInputText(e.target.value)}
                         placeholder="Input..."
-                        value={selectedHistoryItem.input_text}
+                        value={inputText}
                       />
                     </div>
                     <div className="input-wrapper">
-                      <div className="input-label">Old Output</div>
+                      <div className="input-label">Output</div>
                       <TextArea
                         disabled
                         placeholder="Output..."
-                        value={selectedHistoryItem.output_text}
+                        value={outputText}
                       />
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+              {selectedHistoryItem && (
+                <div className="diff-panels">
+                  <div className="diff-panel">
+                    <ReactDiffViewer
+                      oldValue={selectedHistoryItem.input_text}
+                      newValue={inputText}
+                      splitView={true}
+                      leftTitle="Old Input"
+                      rightTitle="Input"
+                      extraLinesSurroundingDiff={20}
+                    />
+                  </div>
+                  <div className="diff-panel">
+                    <ReactDiffViewer
+                      oldValue={selectedHistoryItem.output_text}
+                      newValue={outputText}
+                      splitView={true}
+                      leftTitle="Old Output"
+                      rightTitle="Output"
+                      extraLinesSurroundingDiff={20}
+                    />
+                  </div>
+                </div>
+              )}
               <div className="actions">
                 <Button
                   type="submit"
@@ -274,6 +298,7 @@ export default function Home() {
                   name="prompt"
                   onChange={(e, value) => {
                     setSelectedModel(value.value)
+                    setOutputText('')
                   }}
                   options={modelOptions}
                   value={selectedModel}

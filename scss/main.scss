@@ -107,6 +107,18 @@
           }
         }
 
+        .diff-panels {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          flex: 1;
+          gap: 16px;
+
+          .diff-panel {
+            flex: 1;
+          }
+        }
+
         .actions {
           display: flex;
           align-items: center;

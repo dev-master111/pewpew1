@@ -1,10 +1,10 @@
-import moment from 'moment';
+import moment from 'moment'
 import { MongoClient } from 'mongodb'
 import getOpenAIInstance from '@/utils/api/getOpenAIInstance'
 
-const url = process.env.MONDODB_URI;
-const client = new MongoClient(url);
-const dbName = process.env.DB_DATABASE;
+const url = process.env.MONDODB_URI
+const client = new MongoClient(url)
+const dbName = process.env.DB_DATABASE
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

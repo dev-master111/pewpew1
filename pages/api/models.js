@@ -8,7 +8,7 @@ export default async function handler(req, res) {
 
   try {
     const openai = getOpenAIInstance()
-    const response = await openai.listModels();
+    const response = await openai.listModels()
 
     return res.status(200).json(response.data)
   } catch (error) {

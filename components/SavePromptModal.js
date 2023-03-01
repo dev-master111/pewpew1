@@ -1,7 +1,7 @@
 import React from 'react'
 import { Button, Form, Modal } from 'semantic-ui-react'
 
-function SavePromptModal({ onSubmit }) {
+function SavePromptModal({ onSubmit, text, prompts, current }) {
   const [open, setOpen] = React.useState(false)
   const [name, setName] = React.useState('')
   const [description, setDescription] = React.useState('')
@@ -10,10 +10,60 @@ function SavePromptModal({ onSubmit }) {
     if (!open) {
       setName('')
       setDescription('')
+    } else {
+      if (current) {
+        const promptDetails = prompts.find(prompt => prompt._id === current)
+        setName(promptDetails.name)
+        setDescription(promptDetails.description)
+      }
     }
   }, [open])
 
   const handleSubmit = async () => {
+    try {
+      let response
+
+      if (current) {
+        response = await fetch('/api/prompts', {
+          method: 'PUT',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            id: current,
+            name,
+            description,
+            text
+          })
+        })
+      } else {
+        response = await fetch('/api/prompts', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name,
+            description,
+            text
+          })
+        })
+      }
+
+      const responseData = await response.json()
+      if (responseData && Array.isArray(responseData)) {
+        onSubmit(responseData)
+      }
+    } catch (error) {
+      setOutputText('')
+    }
+
+    setOpen(false)
+  }
+
+  const onSaveAsNew = async () => {
     try {
       const response = await fetch('/api/prompts', {
         method: 'POST',
@@ -23,7 +73,8 @@ function SavePromptModal({ onSubmit }) {
         },
         body: JSON.stringify({
           name,
-          description
+          description,
+          text
         })
       })
 
@@ -71,7 +122,13 @@ function SavePromptModal({ onSubmit }) {
           Cancel
         </Button>
         <Button
-          content="Save"
+          onClick={onSaveAsNew}
+          disabled={!name}
+        >
+          Save as new
+        </Button>
+        <Button
+          content={current ? "Update" : "Save"}
           disabled={!name}
           onClick={handleSubmit}
           positive
