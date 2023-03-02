@@ -177,6 +177,22 @@ export default function Home() {
     }
   }
 
+  const getPreHistory = () => {
+    if (selectedHistoryItem) {
+      const selectedHistoryIndex = historyList.findIndex(hisData => hisData._id === selectedHistoryItem._id)
+
+      if (selectedHistoryIndex < historyList.length - 1) {
+        return historyList[selectedHistoryIndex + 1]
+      }
+
+      return {}
+    }
+
+    return {}
+  }
+
+  const lastHistory = getPreHistory()
+
   return (
     <>
       <Head>
@@ -257,22 +273,24 @@ export default function Home() {
                 <div className="diff-panels">
                   <div className="diff-panel">
                     <ReactDiffViewer
-                      oldValue={selectedHistoryItem.input_text}
-                      newValue={inputText}
+                      oldValue={lastHistory.input_text || ''}
+                      newValue={selectedHistoryItem.input_text}
                       splitView={true}
                       leftTitle="Old Input"
                       rightTitle="Input"
                       extraLinesSurroundingDiff={20}
+                      showDiffOnly={false}
                     />
                   </div>
                   <div className="diff-panel">
                     <ReactDiffViewer
-                      oldValue={selectedHistoryItem.output_text}
-                      newValue={outputText}
+                      oldValue={lastHistory.output_text || ''}
+                      newValue={selectedHistoryItem.output_text}
                       splitView={true}
                       leftTitle="Old Output"
                       rightTitle="Output"
                       extraLinesSurroundingDiff={20}
+                      showDiffOnly={false}
                     />
                   </div>
                 </div>
