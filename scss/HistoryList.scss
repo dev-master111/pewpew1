@@ -25,6 +25,7 @@
   .history-list-view {
     flex: 1;
     overflow: auto;
+    max-height: calc(100vh - 156px);
 
     .history-day {
       display: flex;

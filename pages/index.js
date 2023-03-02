@@ -1,12 +1,17 @@
-import Head from 'next/head'
 import { useState, useEffect } from 'react'
+import Head from 'next/head'
 import { Divider, TextArea, Form,  Button, Icon, Loader, Dimmer } from 'semantic-ui-react'
+import { ToastContainer, toast } from 'react-toastify'
+import ReactDiffViewer from 'react-diff-viewer'
+
 import RangeItem from '@/components/RangeItem'
 import SavePromptModal from '@/components/SavePromptModal'
 import HistoryList from '@/components/HistoryList'
+import getHisotry from '@/utils/api/getHistory'
+import getModels from '@/utils/api/getModels'
+import getPrompts from '@/utils/api/getPrompts'
+import submitCompletion from '@/utils/api/submitCompletion'
 import 'react-toastify/dist/ReactToastify.css'
-import { ToastContainer, toast } from 'react-toastify'
-import ReactDiffViewer from 'react-diff-viewer'
 
 export default function Home() {
   const [temperature, setTemperature] = useState(0.7)
@@ -40,12 +45,10 @@ export default function Home() {
     setLoading(true)
 
     try {
-      await getPropmpts()
+      await getPromptsData()
+      const modelsData = await getModels()
 
-      const response = await fetch('/api/models')
-      const responseData = await response.json()
-
-      setModelOptions(responseData.data.map(modelData => ({
+      setModelOptions(modelsData.data.map(modelData => ({
         key: modelData.id,
         text: modelData.id,
         value: modelData.id
@@ -53,7 +56,7 @@ export default function Home() {
 
       setLoading(false)
     } catch (error) {
-      console.error('Failed to get models')
+      console.error('Failed to get models:')
       console.error(error)
       setLoading(false)
     }
@@ -61,22 +64,20 @@ export default function Home() {
 
   const getHistoryData = async () => {
     try {
-      const historyRes = await fetch(`/api/history?prompt=${selectedPrompt}`)
-      const historyData = await historyRes.json()
+      const historyData = await getHisotry(selectedPrompt)
 
       if (historyData && Array.isArray(historyData)) {
         setHistoryList(historyData)
       }
     } catch (error) {
-      console.error('Failed to get models')
+      console.error('Failed to get history:')
       console.error(error)
     }
   }
 
-  const getPropmpts = async () => {
+  const getPromptsData = async () => {
     try {
-      const promptsRes = await fetch('/api/prompts')
-      const promptsData = await promptsRes.json()
+      const promptsData = await getPrompts()
 
       if (promptsData && Array.isArray(promptsData)) {
         setPromptOptions(promptsData)
@@ -99,7 +100,7 @@ export default function Home() {
         }
       }
     } catch (error) {
-      console.error('Failed to get models')
+      console.error('Failed to get prompts:')
       console.error(error)
     }
   }
@@ -119,28 +120,20 @@ export default function Home() {
 
     try {
       setLoading(true)
-      const response = await fetch('/api/completions', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          text: inputText,
-          prompt: selectedPrompt,
-          options: {
-            temperature,
-            maxTokens: maxLen,
-            topP: topP,
-            frequencyPenalty: freqency,
-            presencePenalty: presence
-          }
-        })
-      })
 
-      const responseData = await response.json()
-      if (responseData.choices && responseData.choices.length > 0){
-        setOutputText(responseData.choices[0].text)
+      const completionData = await submitCompletion({
+        text: inputText,
+        prompt: selectedPrompt,
+        options: {
+          temperature,
+          maxTokens: maxLen,
+          topP: topP,
+          frequencyPenalty: freqency,
+          presencePenalty: presence
+        }
+      })
+      if (completionData.choices && completionData.choices.length > 0){
+        setOutputText(completionData.choices[0].text)
       } else {
         setOutputText('')
       }

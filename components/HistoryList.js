@@ -39,11 +39,11 @@ export default function HistoryList({
       <div className="hisotry-header">
         <div className="period">30-day hisotry</div>
         <div className="actions">
-          <Dropdown text="" icon="ellipsis horizontal">
+          {/* <Dropdown text="" icon="ellipsis horizontal">
             <Dropdown.Menu>
               <Dropdown.Item text='New' />
             </Dropdown.Menu>
-          </Dropdown>
+          </Dropdown> */}
           <Icon name="times" onClick={onClose} />
         </div>
       </div>

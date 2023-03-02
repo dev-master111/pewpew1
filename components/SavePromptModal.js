@@ -1,12 +1,13 @@
-import React from 'react'
-import { Button, Form, Modal } from 'semantic-ui-react'
+import { useState, useEffect } from 'react'
+import { Button, Dimmer, Form, Loader, Modal } from 'semantic-ui-react'
 
 function SavePromptModal({ onSubmit, text, prompts, current }) {
-  const [open, setOpen] = React.useState(false)
-  const [name, setName] = React.useState('')
-  const [description, setDescription] = React.useState('')
+  const [open, setOpen] = useState(false)
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open) {
       setName('')
       setDescription('')
@@ -20,6 +21,8 @@ function SavePromptModal({ onSubmit, text, prompts, current }) {
   }, [open])
 
   const handleSubmit = async () => {
+    setSubmitting(true)
+
     try {
       let response
 
@@ -60,10 +63,13 @@ function SavePromptModal({ onSubmit, text, prompts, current }) {
       setOutputText('')
     }
 
+    setSubmitting(false)
     setOpen(false)
   }
 
   const onSaveAsNew = async () => {
+    setSubmitting(true)
+
     try {
       const response = await fetch('/api/prompts', {
         method: 'POST',
@@ -87,6 +93,7 @@ function SavePromptModal({ onSubmit, text, prompts, current }) {
     }
 
     setOpen(false)
+    setSubmitting(false)
   }
 
   return (
@@ -97,6 +104,7 @@ function SavePromptModal({ onSubmit, text, prompts, current }) {
       trigger={<Button>Save</Button>}
       size="tiny"
     >
+      {submitting && <Dimmer active><Loader /></Dimmer>}
       <Modal.Header>Save Prompt</Modal.Header>
       <Modal.Content>
         <Modal.Description>
