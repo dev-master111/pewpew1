@@ -130,17 +130,17 @@ function SavePromptModal({ onSubmit, text, prompts, current }) {
           Cancel
         </Button>
         <Button
-          onClick={onSaveAsNew}
-          disabled={!name}
-        >
-          Save as new
-        </Button>
-        <Button
           content={current ? "Update" : "Save"}
           disabled={!name}
           onClick={handleSubmit}
-          positive
         />
+        <Button
+          onClick={onSaveAsNew}
+          disabled={!name}
+          positive
+        >
+          Save as new
+        </Button>
       </Modal.Actions>
     </Modal>
   )

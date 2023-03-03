@@ -59,6 +59,7 @@ export default function Home() {
       console.error('Failed to get models:')
       console.error(error)
       setLoading(false)
+      toast.error(`Failed to get models: ${error.message}`)
     }
   }
 
@@ -72,6 +73,7 @@ export default function Home() {
     } catch (error) {
       console.error('Failed to get history:')
       console.error(error)
+      toast.error(`Failed to get history: ${error.message}`)
     }
   }
 
@@ -102,6 +104,7 @@ export default function Home() {
     } catch (error) {
       console.error('Failed to get prompts:')
       console.error(error)
+      toast.error(`Failed to get prompts: ${error.message}`)
     }
   }
 
@@ -125,11 +128,12 @@ export default function Home() {
         text: inputText,
         prompt: selectedPrompt,
         options: {
-          temperature,
-          maxTokens: maxLen,
-          topP: topP,
-          frequencyPenalty: freqency,
-          presencePenalty: presence
+          temperature: parseFloat(temperature),
+          maxTokens: parseInt(maxLen),
+          topP: parseFloat(topP),
+          frequencyPenalty: parseFloat(freqency),
+          presencePenalty: parseFloat(presence),
+          bestOf: parseFloat(bestOf)
         }
       })
       if (completionData.choices && completionData.choices.length > 0){
@@ -141,6 +145,7 @@ export default function Home() {
       await getHistoryData()
       setLoading(false)
     } catch (error) {
+      toast.error(`Failed to get completion: ${error.message}`)
       setOutputText('')
       setLoading(false)
     }
@@ -256,6 +261,11 @@ export default function Home() {
                         onChange={e => setInputText(e.target.value)}
                         placeholder="Input..."
                         value={inputText}
+                        onKeyDown={e => {
+                          if (e.ctrlKey && e.key === 'Enter') {
+                            handleSubmit(e)
+                          }
+                        }}
                       />
                     </div>
                     <div className="input-wrapper">
@@ -366,7 +376,7 @@ export default function Home() {
               <RangeItem
                 label="Best of"
                 value={bestOf}
-                max={20}
+                max={3}
                 min={1}
                 step={1}
                 onChange={e => setBestOf(e.target.value)}

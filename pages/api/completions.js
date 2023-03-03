@@ -29,6 +29,7 @@ export default async function handler(req, res) {
       top_p: options.topP,
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
+      best_of: options.bestOf
     })
 
     if (response.data.choices && response.data.choices.length > 0){
