@@ -17,18 +17,22 @@ export default async function handler(req, res) {
     const db = client.db(dbName)
     const collection = db.collection('prompts')
 
+    const { email: userEmail } = req.query
+
     if (req.method === 'POST') {
       const {
         name,
         description,
-        text
+        text,
+        email
       } = req.body
 
       await collection.insertOne({
         created_at: moment().format(),
         name,
         description,
-        text
+        text,
+        email
       })
     }
 
@@ -37,7 +41,8 @@ export default async function handler(req, res) {
         id,
         name,
         description,
-        text
+        text,
+        email
       } = req.body
 
       await collection.updateOne(
@@ -47,13 +52,14 @@ export default async function handler(req, res) {
             updated_at: moment().format(),
             name,
             description,
-            text
+            text,
+            email
           }
         }
       )
     }
 
-    const findResult = await collection.find({}).sort({ name: 1 }).toArray()
+    const findResult = await collection.find({ email: userEmail }).sort({ name: 1 }).toArray()
     return res.status(200).json(findResult)
   } catch (error) {
     console.log('get prompts error:')

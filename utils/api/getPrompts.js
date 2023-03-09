@@ -1,6 +1,8 @@
 const getPrompts = async () => {
   try {
-    const response = await fetch('/api/prompts')
+    const userResponse = await fetch(`/api/auth/me`)
+    const userInfo = await userResponse.json()
+    const response = await fetch(`/api/prompts?email=${userInfo.email}`)
     const responseData = await response.json()
 
     if (!response.ok) {

@@ -3,11 +3,13 @@ import Head from 'next/head'
 import { Divider, TextArea, Form,  Button, Icon, Loader, Dimmer } from 'semantic-ui-react'
 import { ToastContainer, toast } from 'react-toastify'
 import ReactDiffViewer from 'react-diff-viewer'
+import { useUser } from '@auth0/nextjs-auth0/client';
 
+import Header from '@/components/Header'
 import RangeItem from '@/components/RangeItem'
 import SavePromptModal from '@/components/SavePromptModal'
 import HistoryList from '@/components/HistoryList'
-import getHisotry from '@/utils/api/getHistory'
+import getHistory from '@/utils/api/getHistory'
 import getModels from '@/utils/api/getModels'
 import getPrompts from '@/utils/api/getPrompts'
 import submitCompletion from '@/utils/api/submitCompletion'
@@ -37,6 +39,8 @@ export default function Home() {
   const [historyList, setHistoryList] = useState([])
   const [loading, setLoading] = useState(false)
 
+  const { isLoading, user } = useUser();
+
   useEffect(() => {
     initialize()
   }, [])
@@ -65,7 +69,7 @@ export default function Home() {
 
   const getHistoryData = async () => {
     try {
-      const historyData = await getHisotry(selectedPrompt)
+      const historyData = await getHistory(selectedPrompt)
 
       if (historyData && Array.isArray(historyData)) {
         setHistoryList(historyData)
@@ -199,13 +203,20 @@ export default function Home() {
   const lastHistory = getPreHistory()
 
   return (
+    isLoading || !user ?
+    <div className="page-loader">
+      <Header />
+      <Dimmer active>
+        <Loader size="large" />
+      </Dimmer>
+    </div>
+    :
     <>
       <Head>
         <title>OpenAI Simulator</title>
       </Head>
       <main className="main-wrapper">
-        <div className="page-header">
-        </div>
+        <Header />
         <Divider />
         <div className="page-content">
           <ToastContainer

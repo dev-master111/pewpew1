@@ -11,13 +11,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { prompt } = req.query
+    const { prompt, email } = req.query
 
     await client.connect()
     console.log('Connected successfully to server')
     const db = client.db(dbName)
     const collection = db.collection('history')
-    const findResult = await collection.find(prompt && prompt !== 'null' ? { prompt } : {}).sort({ created_at: -1 }).toArray()
+    const findResult = await collection.find(prompt && prompt !== 'null' ? { prompt, email } : {}).sort({ created_at: -1 }).toArray()
     return res.status(200).json(findResult)
   } catch (error) {
     console.log('get history error:')

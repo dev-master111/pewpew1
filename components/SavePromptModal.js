@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Button, Dimmer, Form, Loader, Modal } from 'semantic-ui-react'
+import { useUser } from '@auth0/nextjs-auth0/client';
 
 function SavePromptModal({ onSubmit, text, prompts, current }) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  const { user } = useUser();
 
   useEffect(() => {
     if (!open) {
@@ -27,7 +30,7 @@ function SavePromptModal({ onSubmit, text, prompts, current }) {
       let response
 
       if (current) {
-        response = await fetch('/api/prompts', {
+        response = await fetch(`/api/prompts?email=${user.email}`, {
           method: 'PUT',
           headers: {
             Accept: 'application/json',
@@ -37,11 +40,12 @@ function SavePromptModal({ onSubmit, text, prompts, current }) {
             id: current,
             name,
             description,
-            text
+            text,
+            email: user.email
           })
         })
       } else {
-        response = await fetch('/api/prompts', {
+        response = await fetch(`/api/prompts?email=${user.email}`, {
           method: 'POST',
           headers: {
             Accept: 'application/json',
@@ -50,7 +54,8 @@ function SavePromptModal({ onSubmit, text, prompts, current }) {
           body: JSON.stringify({
             name,
             description,
-            text
+            text,
+            email: user.email
           })
         })
       }
@@ -71,7 +76,7 @@ function SavePromptModal({ onSubmit, text, prompts, current }) {
     setSubmitting(true)
 
     try {
-      const response = await fetch('/api/prompts', {
+      const response = await fetch(`/api/prompts?email=${user.email}`, {
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -80,7 +85,8 @@ function SavePromptModal({ onSubmit, text, prompts, current }) {
         body: JSON.stringify({
           name,
           description,
-          text
+          text,
+          email: user.email
         })
       })
 

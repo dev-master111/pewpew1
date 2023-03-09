@@ -16,7 +16,8 @@ export default async function handler(req, res) {
     const {
       text,
       prompt,
-      options
+      options,
+      email
     } = req.body
 
     const openai = getOpenAIInstance()
@@ -42,7 +43,8 @@ export default async function handler(req, res) {
         input_text: text,
         user: 'dev-master111',
         prompt,
-        output_text: response.data.choices[0].text
+        output_text: response.data.choices[0].text,
+        email
       })
 
       await client.close()
